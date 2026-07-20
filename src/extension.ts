@@ -50,12 +50,23 @@ function updateStatusBarItem(): void {
 function getNumberOfSelectedLines(
   editor: vscode.TextEditor | undefined
 ): number {
-  let lines = 0;
-  if (editor) {
-    lines = editor.selections.reduce(
-      (prev, curr) => prev + (curr.end.line - curr.start.line) + 1,
-      0
-    );
+  if (!editor) {
+    return 0;
   }
-  return lines;
+  const selectedLines = new Set<number>();
+  for (const selection of editor.selections) {
+    // When a selection ends at character 0 of a line (VS Code's
+    // shift-select-whole-line behaviour), that line is not actually selected —
+    // only a cursor sits at its start. Exclude it, but only when the end is on
+    // a different line than the start; a zero-width cursor (start.line ===
+    // end.line) must still count as one line.
+    const endLine =
+      selection.end.character === 0 && selection.end.line > selection.start.line
+        ? selection.end.line - 1
+        : selection.end.line;
+    for (let line = selection.start.line; line <= endLine; line++) {
+      selectedLines.add(line);
+    }
+  }
+  return selectedLines.size;
 }
