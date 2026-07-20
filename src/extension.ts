@@ -55,9 +55,11 @@ function getNumberOfSelectedLines(
   }
   const selectedLines = new Set<number>();
   for (const selection of editor.selections) {
-    // When a selection ends at character 0 of a line, that line itself is not
-    // selected — only a cursor sits at its start. Exclude it unless the
-    // selection is entirely on that line (i.e. a zero-width cursor).
+    // When a selection ends at character 0 of a line (VS Code's
+    // shift-select-whole-line behaviour), that line is not actually selected —
+    // only a cursor sits at its start. Exclude it, but only when the end is on
+    // a different line than the start; a zero-width cursor (start.line ===
+    // end.line) must still count as one line.
     const endLine =
       selection.end.character === 0 && selection.end.line > selection.start.line
         ? selection.end.line - 1
